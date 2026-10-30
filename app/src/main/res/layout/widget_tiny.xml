@@ -1,0 +1,12 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/widget_background" android:padding="6dp" android:gravity="center" android:orientation="vertical">
+    <TextView android:id="@+id/remaining" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:gravity="center" android:text="—" android:textSize="26sp" android:fontFamily="sans-serif-medium"
+        android:includeFontPadding="false" android:maxLines="1" android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="8sp" android:autoSizeMaxTextSize="30sp" android:autoSizeStepGranularity="1sp" />
+    <TextView android:id="@+id/remaining_label" android:layout_width="match_parent" android:layout_height="12dp" android:visibility="gone"
+        android:gravity="center" android:textSize="10sp" android:includeFontPadding="false" android:maxLines="1"
+        android:autoSizeTextType="uniform" android:autoSizeMinTextSize="6sp" android:autoSizeMaxTextSize="10sp" android:autoSizeStepGranularity="1sp" />
+    <include android:id="@+id/loading_container" layout="@layout/widget_loading" android:layout_width="24dp" android:layout_height="20dp" android:visibility="gone" />
+</LinearLayout>

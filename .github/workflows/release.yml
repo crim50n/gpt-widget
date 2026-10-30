@@ -1,0 +1,105 @@
+name: Build Release APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Validate release tag and notes
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --version
+          VERSION=$(./gradlew --quiet :app:printVersionName)
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]
+          if [[ "$GITHUB_REF_TYPE" != tag || "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+            printf '::error::Run this workflow from the existing v%s tag.\n' "$VERSION"
+            exit 1
+          fi
+          test -f "release-notes/$VERSION.md"
+          printf 'name=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Test and lint
+        run: |
+          python3 scripts/check_localization.py
+          python3 scripts/check_publication.py
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
+      - name: Decode signing key
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_BASE64:?KEYSTORE_BASE64 is required}"
+          : "${KEYSTORE_ALIAS:?KEYSTORE_ALIAS is required}"
+          : "${KEYSTORE_PASSWORD:?KEYSTORE_PASSWORD is required}"
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/usage-release.keystore"
+      - name: Build signed release
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/usage-release.keystore
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :app:packageReleaseArtifacts
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          for apk in release-apks/*.apk; do
+            "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk"
+          done
+      - name: Verify checksum
+        working-directory: release-apks
+        run: sha256sum --check *.sha256
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatgpt-usage-${{ steps.version.outputs.name }}
+          path: release-apks/*
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          TAG="v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            printf '::error::Release %s already exists; published assets are immutable.\n' "$TAG"
+            exit 1
+          fi
+          gh release create "$TAG" --verify-tag --title "$VERSION" \
+            --notes-file "release-notes/$VERSION.md" release-apks/*
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/usage-release.keystore"

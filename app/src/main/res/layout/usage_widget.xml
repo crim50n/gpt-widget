@@ -1,0 +1,47 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+<LinearLayout
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center_vertical" android:padding="18dp" android:background="@drawable/widget_background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="40dp" android:gravity="end|center_vertical">
+        <TextView android:id="@+id/brand" android:visibility="gone" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:text="ChatGPT" android:fontFamily="sans-serif-medium" android:textSize="15sp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" />
+        <include android:id="@+id/refresh_control" layout="@layout/widget_refresh" android:layout_width="40dp" android:layout_height="40dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/hero" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:paddingTop="6dp">
+        <TextView android:id="@+id/remaining" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="—" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" android:textSize="52sp" android:maxLines="1" />
+        <TextView android:id="@+id/remaining_label" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="12sp" android:layout_marginTop="3dp" android:maxLines="2" />
+        <ImageView android:id="@+id/progress" android:layout_width="match_parent" android:layout_height="6dp"
+            android:layout_marginTop="12dp" android:scaleType="fitXY" android:contentDescription="@string/usage_remaining_description" />
+        <TextView android:id="@+id/reset_time" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="9dp" android:textSize="12sp" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/stats" android:layout_width="match_parent" android:layout_height="wrap_content"
+         android:orientation="horizontal" android:layout_marginTop="12dp" android:baselineAligned="false">
+        <LinearLayout android:id="@+id/reset_card" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:minHeight="60dp"
+            android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_inset">
+            <TextView android:id="@+id/resets" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="—" android:textSize="22sp" android:fontFamily="sans-serif-medium" android:maxLines="1" />
+            <TextView android:id="@+id/resets_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/resets" android:textSize="11sp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="8sp" android:autoSizeMaxTextSize="11sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+        <TextView android:layout_width="8dp" android:layout_height="1dp" />
+        <LinearLayout android:id="@+id/credit_card" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:minHeight="60dp"
+            android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_inset">
+            <TextView android:id="@+id/credits" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="—" android:textSize="22sp" android:fontFamily="sans-serif-medium" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/credits_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/credits" android:textSize="11sp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="8sp" android:autoSizeMaxTextSize="11sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/stats_summary" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:textSize="13sp" android:lineSpacingExtra="4dp" android:visibility="gone" />
+    <TextView android:id="@+id/expiry" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:textSize="12sp" />
+    <TextView android:id="@+id/tickets" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="14dp" android:textSize="12sp" android:lineSpacingExtra="4dp" android:visibility="gone" />
+    <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:textSize="10sp" />
+</LinearLayout>
+</FrameLayout>

@@ -1,0 +1,7 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/refresh" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:padding="9dp" android:src="@drawable/ic_refresh" android:contentDescription="@string/refresh_limits" />
+    <include android:id="@+id/loading_container" layout="@layout/widget_loading" android:visibility="gone"
+        android:layout_width="match_parent" android:layout_height="match_parent" />
+</FrameLayout>

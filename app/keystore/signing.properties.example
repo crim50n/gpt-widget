@@ -1,0 +1,7 @@
+# Copy to signing.properties (ignored by Git), then supply your own values.
+# Paths are relative to app/, or absolute.
+keystore=keystore/release.keystore
+keystore.alias=YOUR_KEY_ALIAS
+keystore.password=YOUR_STORE_PASSWORD
+# Optional when the private-key password differs from the keystore password:
+# key.password=YOUR_KEY_PASSWORD

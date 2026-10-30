@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a problem with sign-in, widgets, or account usage.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: '1.0.0'
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Android version, device, and launcher
+      placeholder: Android 15, Samsung, One UI Home
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include steps to reproduce and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Screenshots or error text
+      description: Hide account details and one-time login codes. Do not include tokens, cookies, signing keys, or full HAR files.

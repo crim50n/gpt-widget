@@ -1,0 +1,11 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ProgressBar android:id="@+id/spinner_dark" style="?android:attr/progressBarStyleSmall"
+        android:layout_width="18dp" android:layout_height="18dp" android:layout_gravity="center"
+        android:indeterminate="true" android:indeterminateTint="#FFFFFF" android:visibility="gone"
+        android:contentDescription="@string/loading_data" />
+    <ProgressBar android:id="@+id/spinner_light" style="?android:attr/progressBarStyleSmall"
+        android:layout_width="18dp" android:layout_height="18dp" android:layout_gravity="center"
+        android:indeterminate="true" android:indeterminateTint="#171717" android:visibility="gone"
+        android:contentDescription="@string/loading_data" />
+</FrameLayout>

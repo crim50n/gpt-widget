@@ -1,0 +1,108 @@
+plugins { id 'com.android.application' }
+
+// Compatible with the signing.properties / GitHub secrets used by sibling Android projects.
+def signingProperties = new Properties()
+def signingPropertiesFile = providers.gradleProperty('signingPropertiesFile')
+        .map { rootProject.file(it) }.getOrElse(file('keystore/signing.properties'))
+if (signingPropertiesFile.isFile()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+def signingValue = { String environment, String property ->
+    providers.environmentVariable(environment).orNull ?: signingProperties.getProperty(property)
+}
+def keystorePath = signingValue('KEYSTORE_FILE', 'keystore')
+def keystoreAlias = signingValue('KEYSTORE_ALIAS', 'keystore.alias')
+def keystorePassword = signingValue('KEYSTORE_PASSWORD', 'keystore.password')
+def signingKeyPassword = signingValue('KEY_PASSWORD', 'key.password') ?: keystorePassword
+def signingReady = keystorePath && keystoreAlias && keystorePassword && signingKeyPassword
+
+android {
+    namespace 'dev.local.usagewidget'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+    defaultConfig {
+        applicationId 'dev.local.usagewidget'
+        minSdk 26
+        targetSdk 35
+        versionCode 23
+        versionName '1.0.0'
+        manifestPlaceholders = [appLabel: '@string/app_name']
+    }
+    signingConfigs {
+        if (signingReady) {
+            release {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keystoreAlias
+                keyPassword signingKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            manifestPlaceholders = [appLabel: '@string/app_name_dev']
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingReady) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
+        unitTests.all { systemProperty 'updateWidgetPreviews', project.findProperty('updateWidgetPreviews') ?: 'false' }
+    }
+}
+
+def verifyReleaseSigning = tasks.register('verifyReleaseSigning') {
+    group = 'verification'
+    description = 'Reject unsigned release builds without printing signing credentials.'
+    doLast {
+        if (!signingReady) throw new GradleException('Release signing is missing. See docs/RELEASING.md.')
+        if (!file(keystorePath).isFile()) throw new GradleException('Release keystore file does not exist.')
+    }
+}
+tasks.configureEach {
+    if (name == 'preReleaseBuild') dependsOn verifyReleaseSigning
+}
+tasks.register('printVersionName') {
+    doLast { println android.defaultConfig.versionName }
+}
+tasks.register('exportDocumentationImages', Copy) {
+    group = 'documentation'
+    description = 'Export clean UI renders for the README after running all local tests.'
+    dependsOn 'testDebugUnitTest'
+    from(layout.buildDirectory.dir('widget-previews')) {
+        include 'settings-dark.png', 'settings-light.png', 'dialog-dark.png', 'dialog-light.png'
+    }
+    into rootProject.file('docs/assets')
+}
+tasks.register('packageReleaseArtifacts') {
+    group = 'distribution'
+    description = 'Build a signed release APK and its SHA-256 checksum.'
+    dependsOn 'assembleRelease'
+    doLast {
+        def source = layout.buildDirectory.file('outputs/apk/release/app-release.apk').get().asFile
+        if (!source.isFile()) throw new GradleException('Signed release APK was not produced.')
+        def outputDirectory = rootProject.file('release-apks')
+        outputDirectory.mkdirs()
+        def artifact = new File(outputDirectory, "chatgpt-usage-${android.defaultConfig.versionName}.apk")
+        java.nio.file.Files.copy(source.toPath(), artifact.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        def hash = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.bytes).encodeHex().toString()
+        new File(outputDirectory, "${artifact.name}.sha256").setText("${hash}  ${artifact.name}\n", 'UTF-8')
+        println "Release artifacts: ${outputDirectory}"
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
+}

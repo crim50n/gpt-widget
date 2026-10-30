@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.Usage.Dark" parent="Theme.Usage.Base.Dark">
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+    <style name="Theme.Usage.Light" parent="Theme.Usage.Base.Light">
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+</resources>
