@@ -72,7 +72,7 @@ Store the keystore and recovery details securely outside GitHub as well. All fut
    Run `python3 scripts/check_publication.py` before staging to check the Git-visible file set for private/generated material.
 4. Commit reviewed changes and push an annotated `v<version>` tag.
 
-`release.yml` checks that the existing tag matches `versionName`, runs tests/lint, decodes the signing key into the runner's temporary directory, builds the signed APK, verifies its signature and checksum, then publishes a GitHub Release. Manual dispatch must select the version tag, not a branch. Existing release assets are not overwritten.
+`release.yml` checks that the existing tag matches `versionName`, runs tests/lint, decodes the signing key into the runner's temporary directory, builds the signed APK, verifies its signature and checksum, then publishes a GitHub Release. For manual dispatch, choose the workflow on `main` and enter the existing version tag in the `tag` input. The workflow checks out that tag and verifies its commit before building, so CI infrastructure fixes can be used without moving a release tag. Existing release assets are not overwritten.
 
 The workflow uses its built-in `GITHUB_TOKEN`; no personal access token is required for release publication. Signing material is removed in an `always()` cleanup step.
 

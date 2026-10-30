@@ -4,12 +4,17 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build and publish
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -21,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
       - uses: actions/setup-java@v4
         with:
@@ -28,20 +34,26 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Validate release tag and notes
         id: version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
           ./gradlew --version
           VERSION=$(./gradlew --quiet :app:printVersionName)
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]
-          if [[ "$GITHUB_REF_TYPE" != tag || "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+          if [[ "$RELEASE_TAG" != "v$VERSION" ]]; then
             printf '::error::Run this workflow from the existing v%s tag.\n' "$VERSION"
             exit 1
           fi
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
           test -f "release-notes/$VERSION.md"
           printf 'name=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
       - name: Test and lint
